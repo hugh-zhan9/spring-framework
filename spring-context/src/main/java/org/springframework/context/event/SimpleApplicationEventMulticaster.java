@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ErrorHandler;
@@ -137,6 +138,8 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 		// 返回当前对象所管理的监听了当前事件的 ApplicationListener 分别调用 invokeListener 方法
 		for (ApplicationListener<?> listener : getApplicationListeners(event, type)) {
 			// 如果线程池不为空，则交由线程池进行执行
+			// 默认情况下，这个 executor 是空的，所以是串行运行的，如果需要并行的话，可以自己赋值一个 executor 给它
+			// 参考下面的示例代码
 			if (executor != null) {
 				executor.execute(() -> invokeListener(listener, event));
 			}
@@ -146,6 +149,25 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 			}
 		}
 	}
+
+	/**
+	 *
+	 * 示例代码，支持并发事件处理
+	 *
+	 * @Bean
+	 * public ApplicationEventMulticaster applicationEventMulticaster() { //@1
+	 * 		//创建一个事件广播器
+	 * 		SimpleApplicationEventMulticaster result = new SimpleApplicationEventMulticaster();
+	 * 		//给广播器提供一个线程池，通过这个线程池来调用事件监听器
+	 * 		Executor executor = this.applicationEventMulticasterThreadPool().getObject();
+	 * 		//设置异步执行器
+	 * 		result.setTaskExecutor(executor);//@1
+	 * 		return result;
+	 *    }
+	 *
+	 *
+	 */
+
 
 	private ResolvableType resolveDefaultEventType(ApplicationEvent event) {
 		return ResolvableType.forInstance(event);
