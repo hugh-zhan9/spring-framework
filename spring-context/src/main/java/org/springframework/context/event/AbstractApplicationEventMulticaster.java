@@ -166,12 +166,19 @@ public abstract class AbstractApplicationEventMulticaster
 	 * @param eventType the event type
 	 * @return a Collection of ApplicationListeners
 	 * @see org.springframework.context.ApplicationListener
+	 *
+	 *
+	 * 获取监听指定 ApplicationEvent 的 ApplicationListener
+	 *
+	 * 当发布器发布事件对象后，会通过 {@link #getApplicationListeners} 方法进行监听器的获取，
+	 * 返回的监听器集合进行遍历和类型解析，匹配到符合条件的监听器。
 	 */
-	protected Collection<ApplicationListener<?>> getApplicationListeners(
-			ApplicationEvent event, ResolvableType eventType) {
+	protected Collection<ApplicationListener<?>> getApplicationListeners(ApplicationEvent event, ResolvableType eventType) {
 
+		// 最终发布的事件对象
 		Object source = event.getSource();
 		Class<?> sourceType = (source != null ? source.getClass() : null);
+		// 将给定事件类型与源类型进行封装
 		ListenerCacheKey cacheKey = new ListenerCacheKey(eventType, sourceType);
 
 		// Potential new retriever to populate
@@ -218,8 +225,11 @@ public abstract class AbstractApplicationEventMulticaster
 		Set<ApplicationListener<?>> filteredListeners = (retriever != null ? new LinkedHashSet<>() : null);
 		Set<String> filteredListenerBeans = (retriever != null ? new LinkedHashSet<>() : null);
 
+		// 当前应用种监听器集合
 		Set<ApplicationListener<?>> listeners;
+		// 当前应用中监听器 BeanName 集合
 		Set<String> listenerBeans;
+
 		synchronized (this.defaultRetriever) {
 			listeners = new LinkedHashSet<>(this.defaultRetriever.applicationListeners);
 			listenerBeans = new LinkedHashSet<>(this.defaultRetriever.applicationListenerBeans);
@@ -228,6 +238,7 @@ public abstract class AbstractApplicationEventMulticaster
 		// Add programmatically registered listeners, including ones coming
 		// from ApplicationListenerDetector (singleton beans and inner beans).
 		for (ApplicationListener<?> listener : listeners) {
+			// 判断监听器是否支持该种事件
 			if (supportsEvent(listener, eventType, sourceType)) {
 				if (retriever != null) {
 					filteredListeners.add(listener);
@@ -243,8 +254,7 @@ public abstract class AbstractApplicationEventMulticaster
 			for (String listenerBeanName : listenerBeans) {
 				try {
 					if (supportsEvent(beanFactory, listenerBeanName, eventType)) {
-						ApplicationListener<?> listener =
-								beanFactory.getBean(listenerBeanName, ApplicationListener.class);
+						ApplicationListener<?> listener = beanFactory.getBean(listenerBeanName, ApplicationListener.class);
 						if (!allListeners.contains(listener) && supportsEvent(listener, eventType, sourceType)) {
 							if (retriever != null) {
 								if (beanFactory.isSingleton(listenerBeanName)) {

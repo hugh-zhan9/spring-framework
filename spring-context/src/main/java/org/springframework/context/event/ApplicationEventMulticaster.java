@@ -22,6 +22,8 @@ import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 
 /**
+ * 时间多播器，它是连接发布器与监听器的桥梁和中转路由，负责将事件对象分发到具体的监听器上去
+ *
  * Interface to be implemented by objects that can manage a number of
  * {@link ApplicationListener} objects and publish events to them.
  *
